@@ -8,6 +8,7 @@ import connectDB from "./config/db.js";
 import webhookRoutes from "./routes/webhook.js";
 import authRoutes from "./routes/auth.js";
 import courseRoutes from "./routes/courses/course.routes.js";
+import { errorMiddleware } from "./middleware/ErrorMiddleware.js";
 
 connectDB();
 
@@ -28,6 +29,8 @@ app.use("/api/courses", courseRoutes);
 app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
+
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

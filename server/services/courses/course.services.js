@@ -1,5 +1,6 @@
 import Course from '../../models/courses/Course.model.js';
 import Category from "../../models/courses/Category.model.js";
+import { createNotFoundError } from '../../utils/appError.js';
 
 /**
  * Fetch courses with advanced search, filtering, and pagination
@@ -78,7 +79,7 @@ export const getCourseBySlug = async (slug) => {
     .populate('tags', 'name slug');
     
   if (!course) {
-    throw new Error('Course not found');
+    throw createNotFoundError('Course not found');
   }
   return course;
 };

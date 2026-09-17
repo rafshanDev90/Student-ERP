@@ -64,3 +64,27 @@ export const updateCourseDetails = async (courseSlug, updateData, clerkUserId, u
     { new: true, runValidators: true }
   );
 };
+
+/**
+ * Delete an existing course record
+ */
+export const deleteCourseDetails = async (courseSlug, clerkUserId, userRole) => {
+  // 1. Fetch the course target by slug
+  const course = await Course.findOne({ slug: courseSlug });
+  if (!course) {
+    throw createNotFoundError('Course target not found');
+  }
+
+  // 2. Security Check: Teachers can only delete THEIR own courses. Admins can delete anything.
+  if (userRole !== 'admin') {
+    const instructorUser = await User.findOne({ clerkId: clerkUserId });
+    if (!course.instructor.equals(instructorUser?._id)) {
+      throw createForbiddenError('Unauthorised: You can only delete courses assigned to you');
+    }
+  }
+
+  // 3. Execute database delete execution
+  await Course.findByIdAndDelete(course._id);
+
+  return { id: course._id, slug: course.slug, title: course.title };
+};

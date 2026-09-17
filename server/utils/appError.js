@@ -9,5 +9,6 @@ export const createNotFoundError = (message = 'Resource not found') => {
     return AppError(message, 404);
 };
 
-export const createBadRequestError = (message = "Bad request data") => createApiError(400, message);
-export const createForbiddenError = (message = "Access denied") => createApiError(403, message);
+export const createBadRequestError = (message = "Bad request data") => AppError(message, 400);
+export const createUnauthorizedError = (message = "Unauthorized") => AppError(message, 401);
+export const createForbiddenError = (message = "Access denied") => AppError(message, 403);

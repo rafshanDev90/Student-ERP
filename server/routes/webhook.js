@@ -18,6 +18,12 @@ router.post("/clerk", express.raw({ type: "application/json" }), async (req, res
 
   const { type, data } = event;
 
+  console.log(
+    "[WEBHOOK] " + new Date().toISOString() + " received event:",
+    type,
+    data?.id ?? ""
+  );
+
   try {
     switch (type) {
       case "user.created":
@@ -25,6 +31,8 @@ router.post("/clerk", express.raw({ type: "application/json" }), async (req, res
           clerkId: data.id,
           email: data.email_addresses?.[0]?.email_address || "",
           name: [data.first_name, data.last_name].filter(Boolean).join(" "),
+          avatarUrl: data.image_url || "",
+          role: data.public_metadata?.role || "student",
         });
         break;
 
@@ -34,6 +42,8 @@ router.post("/clerk", express.raw({ type: "application/json" }), async (req, res
           {
             email: data.email_addresses?.[0]?.email_address || "",
             name: [data.first_name, data.last_name].filter(Boolean).join(" "),
+            avatarUrl: data.image_url || "",
+            ...(data.public_metadata?.role ? { role: data.public_metadata.role } : {}),
           },
           { new: true }
         );

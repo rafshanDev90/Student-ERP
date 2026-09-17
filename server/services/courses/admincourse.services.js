@@ -6,6 +6,27 @@ import { createNotFoundError, createBadRequestError, createForbiddenError } from
 import slugify from 'slugify'; // Dynamic URL generator package
 
 /**
+ * Fetch the course list shown to staff in the admin dashboard.
+ * Admins see every course (all statuses); teachers only see their own.
+ */
+export const getAdminCourses = async (clerkUserId, userRole) => {
+  const filter = {};
+
+  if (userRole !== 'admin') {
+    const instructorUser = await User.findOne({ clerkId: clerkUserId });
+    if (!instructorUser) {
+      throw createNotFoundError('Instructor profile not found in ERP system');
+    }
+    filter.instructor = instructorUser._id;
+  }
+
+  return await Course.find(filter)
+    .populate('instructor', 'name avatarUrl title email')
+    .populate('tags', 'name slug')
+    .sort({ createdAt: -1 });
+};
+
+/**
  * Create a new course record
  */
 export const createNewCourse = async (courseData, clerkUserId) => {

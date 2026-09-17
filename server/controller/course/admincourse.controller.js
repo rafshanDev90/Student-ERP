@@ -1,6 +1,18 @@
-import { createNewCourse, updateCourseDetails, deleteCourseDetails } from "../../services/courses/admincourse.services.js";
+import { createNewCourse, updateCourseDetails, deleteCourseDetails, getAdminCourses } from "../../services/courses/admincourse.services.js";
 import { createApiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+
+/**
+ * GET /api/admin/courses
+ * Role-filtered course list for the admin dashboard
+ */
+export const listCourses = asyncHandler(async (req, res) => {
+  const userRole = req.user?.role || req.auth.sessionClaims?.metadata?.role || 'student';
+
+  const courses = await getAdminCourses(req.auth.userId, userRole);
+
+  return res.status(200).json(createApiResponse(200, courses, 'Courses fetched successfully'));
+});
 
 /**
  * POST /api/v1/admin/courses

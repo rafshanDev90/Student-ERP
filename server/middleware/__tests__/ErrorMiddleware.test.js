@@ -19,23 +19,25 @@ describe('errorMiddleware', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    delete process.env.NODE_ENV;
   });
 
-  it('should fall back to status 500 and "Internal Server Error"', () => {
-    const error = new Error();
+  it('should fall back to status 500 with a generic message', () => {
+    const error = new Error('Database connection failed');
 
     errorMiddleware(error, req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        success: false,
-        message: 'Internal Server Error',
+        status: 'fail',
+        message: 'Internal server error',
+        data: null,
       })
     );
   });
 
-  it('should use custom error status and message if provided', () => {
+  it('should honor a standard statusCode set on a plain error', () => {
     const error = new Error('Custom Bad Request');
     error.statusCode = 400;
 
@@ -44,7 +46,7 @@ describe('errorMiddleware', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        success: false,
+        status: 'fail',
         message: 'Custom Bad Request',
       })
     );
@@ -89,14 +91,15 @@ describe('errorMiddleware Integration', () => {
     const response = await request(app).get('/crash');
 
     expect(response.status).toBe(500);
-    expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe('Database connection failed');
+    expect(response.body.status).toBe('fail');
+    expect(response.body.message).toBe('Internal server error');
   });
 
   it('should catch passed errors and return the correct status', async () => {
     const response = await request(app).get('/bad-request');
 
     expect(response.status).toBe(400);
+    expect(response.body.status).toBe('fail');
     expect(response.body.message).toBe('Invalid Input Data');
   });
 });

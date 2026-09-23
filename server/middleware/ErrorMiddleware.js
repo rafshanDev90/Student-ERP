@@ -1,22 +1,41 @@
-/**This middleware function is a centralized error handler for an Express.js API.
-Its primary purpose is to intercept any errors thrown in your routes or other 
-middleware, log them on the server side for debugging, and return a clean, structured 
-JSON response to the client. */
+import AppError from "../utils/AppError.js";
+import { errorResponse } from "../utils/apiResponse.js";
 
+const isMongooseValidationError = (err) => err.name === "ValidationError";
+const isMongooseCastError = (err) => err.name === "CastError";
+const hasHttpStatus = (err) =>
+  Number.isInteger(err.statusCode) &&
+  err.statusCode >= 400 &&
+  err.statusCode < 600;
 
-//Express recognizes this function as an error-handling middleware because it accepts exactly four parameters
-export const errorMiddleware = ( err, req, res, next) => {
-    const statusCode = err.statusCode || 500; // Default to 500 if no status code is set
-    const message = err.message || 'Internal Server Error'; // Default message
+export const errorMiddleware = (err, req, res, next) => {
+  let statusCode = 500;
+  let message = "Internal server error";
 
-    // Log the error details to the server console for debugging purposes
-    console.error(`Error: ${message}, Status Code: ${statusCode}, Stack: ${err.stack}`);
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+  } else if (isMongooseValidationError(err)) {
+    statusCode = 400;
+    message = Object.values(err.errors)
+      .map((e) => e.message)
+      .join(", ");
+  } else if (isMongooseCastError(err)) {
+    statusCode = 400;
+    message = "Invalid identifier in request";
+  } else if (hasHttpStatus(err)) {
+    // Errors from third-party middleware that already carry an HTTP status.
+    statusCode = err.statusCode;
+    message = err.message || "Request failed";
+  } else {
+    // Programming errors get logged with the stack, users get a generic message.
+    console.error(`[ERROR] ${req.method} ${req.originalUrl}: ${err.stack}`);
+  }
 
-    // Send a structured JSON response to the client
-    res.status(statusCode).json({
-        success: false,
-        message: message,
-        // Optionally include the stack trace in development mode for easier debugging
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-}
+  const payload = { statusCode, message, data: null };
+  if (process.env.NODE_ENV === "development") {
+    payload.stack = err.stack;
+  }
+
+  return errorResponse(res, payload);
+};

@@ -1,8 +1,7 @@
 import { getAuth } from "@clerk/express";
 import { createClerkClient } from "@clerk/express";
 import User from "../models/user.model.js";
-import { createApiResponse } from "../utils/apiResponse.js";
-import { createNotFoundError } from "../utils/appError.js";
+import AppError, { createNotFoundError } from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const clerkClient = createClerkClient();
@@ -32,9 +31,8 @@ const upsertClerkUser = async (clerkId) => {
 };
 
 /**
- * Sync role drift: if the Clerk session token carries a role claim that
- * differs from the stored Mongo user, adopt it (e.g. role changed in the
- * Clerk Dashboard but the webhook hasn't fired yet).
+ * Adopt role changes from the Clerk session claims that have not yet
+ * reached MongoDB via the webhook (e.g. role changed in Clerk Dashboard).
  */
 const syncRoleDrift = async (user, sessionClaims) => {
   const claimedRole = sessionClaims?.metadata?.role;
@@ -45,27 +43,10 @@ const syncRoleDrift = async (user, sessionClaims) => {
 };
 
 export const protect = asyncHandler(async (req, res, next) => {
-  const { userId } = getAuth(req);
-
-  // ---- DEV DIAGNOSTICS -------------------------------------------------
-  const authHeader = req.headers.authorization || "";
-  const rawToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  console.log("[AUTH] " + new Date().toISOString());
-  console.log("[AUTH] path:", req.method, req.originalUrl);
-  if (rawToken) {
-    console.log("[AUTH] raw token:", rawToken);
-  } else {
-    console.log("[AUTH] raw token: <none>");
-  }
-  console.log("[AUTH] clerk userId:", userId ?? "<none>");
-  console.log(
-    "[AUTH] sessionClaims.metadata:",
-    JSON.stringify(getAuth(req).sessionClaims?.metadata ?? null)
-  );
-  // ----------------------------------------------------------------------
+  const { userId, sessionClaims } = getAuth(req);
 
   if (!userId) {
-    return res.status(401).json(createApiResponse(401, null, "Unauthorized"));
+    return next(new AppError("Unauthorized", 401));
   }
 
   let user = await User.findOne({ clerkId: userId });
@@ -75,20 +56,11 @@ export const protect = asyncHandler(async (req, res, next) => {
       user = await upsertClerkUser(userId);
     } catch (error) {
       console.error("Failed to sync Clerk user:", error.message);
-      throw createNotFoundError("User not found");
+      return next(createNotFoundError("User not found"));
     }
   } else {
-    await syncRoleDrift(user, getAuth(req).sessionClaims);
+    await syncRoleDrift(user, sessionClaims);
   }
-
-  console.log(
-    "[AUTH] DB user:",
-    JSON.stringify({
-      clerkId: user?.clerkId,
-      email: user?.email,
-      role: user?.role,
-    })
-  );
 
   req.user = user;
   next();
@@ -96,7 +68,7 @@ export const protect = asyncHandler(async (req, res, next) => {
 
 export const authorize = (...roles) => (req, res, next) => {
   if (!req.user || !roles.includes(req.user.role)) {
-    return res.status(403).json(createApiResponse(403, null, "Access denied"));
+    return next(new AppError("Access denied", 403));
   }
   next();
 };

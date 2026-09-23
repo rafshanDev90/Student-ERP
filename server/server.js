@@ -12,6 +12,7 @@ import courseRoutes from "./routes/courses/course.routes.js";
 import adminCourseRoutes from "./routes/courses/admincourse.routes.js";
 import categoryRoutes from "./routes/courses/category.routes.js";
 import userRoutes from "./routes/users/user.routes.js";
+import studentCourseRoutes from "./routes/studentCourse.routes.js";
 import { errorMiddleware } from "./middleware/ErrorMiddleware.js";
 
 connectDB();
@@ -29,11 +30,14 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/webhook", webhookRoutes);
 app.use("/api/auth", authRoutes);
 
-//Course routes
-
+// Public course catalog + admin management
+app.use("/api/courses", courseRoutes);
 app.use("/api/admin", adminCourseRoutes);
 app.use("/api/admin/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
+
+// Student ERP
+app.use("/api/v1/courses", studentCourseRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, World!");

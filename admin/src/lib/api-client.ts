@@ -16,11 +16,17 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => {
     const body = response.data as
-      | { statusCode?: number; success?: boolean; message?: string; data?: unknown }
+      | { status?: string; message?: string; data?: unknown }
       | undefined
 
-    // Unwrap the server's { statusCode, success, message, data } envelope
-    if (body && typeof body === 'object' && 'data' in body && 'success' in body) {
+    // Unwrap the server's { status, message, data } envelope
+    if (
+      body &&
+      typeof body === 'object' &&
+      'status' in body &&
+      'message' in body &&
+      'data' in body
+    ) {
       return { ...response, data: body.data }
     }
 

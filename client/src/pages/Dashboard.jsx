@@ -9,7 +9,7 @@ export default function Dashboard() {
     async function loadProfile() {
       try {
         const res = await request("/auth/me");
-        setProfile(res.data.user);
+        setProfile(res.data);
       } catch (err) {
         // error is handled by useApi
       }

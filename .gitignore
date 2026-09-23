@@ -2,5 +2,4 @@ server/.env
 docs/unitTest.md
 shadcn-admin-1.0.0
 material-kit-react
-admin
 server/scripts/sync.js

@@ -52,7 +52,7 @@ export const statuses = [
 export const formDefaultValues: CourseFormValues = {
   title: '',
   description: '',
-  thumbnailUrl: '',
+  imageUrl: '',
   duration: '',
   courseType: 'Full Semester',
   level: 'Beginner',
@@ -68,7 +68,7 @@ export function toFormValues(course: Course): CourseFormValues {
   return {
     title: course.title,
     description: course.description,
-    thumbnailUrl: course.thumbnailUrl ?? '',
+    imageUrl: course.imageUrl ?? '',
     duration: course.duration,
     courseType: course.courseType,
     level: course.level,

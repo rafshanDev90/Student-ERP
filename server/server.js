@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import path from "path";
 import express from "express";
 import cors from "cors";
 import compression from "compression";
@@ -24,9 +25,9 @@ app.use(compression());
 app.use(express.json());
 
 
+// Serve locally-stored fallback uploads (public/uploads/**)
+app.use(express.static(path.join(process.cwd(), "public")));
 
-//app.use(clerkMiddleware());
-app.use("/api/courses", courseRoutes);
 app.use("/api/webhook", webhookRoutes);
 app.use("/api/auth", authRoutes);
 

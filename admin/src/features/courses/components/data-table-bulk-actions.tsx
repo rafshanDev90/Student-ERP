@@ -17,6 +17,7 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { statuses, toFormValues } from '../data/data'
 import { type Course } from '../data/schema'
+import { buildCourseFormData } from '../lib/course-form-data'
 import { useUpdateCourse } from '../hooks/use-courses'
 import { CoursesMultiDeleteDialog } from './courses-multi-delete-dialog'
 
@@ -42,7 +43,10 @@ export function CourseBulkActions<TData>({
         courses.map((course) =>
           updateCourse.mutateAsync({
             slug: course.slug,
-            payload: { ...toFormValues(course), status },
+            payload: buildCourseFormData({
+              ...toFormValues(course),
+              status,
+            }),
           })
         )
       )

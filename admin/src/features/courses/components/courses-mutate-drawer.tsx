@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm, type UseFormReturn } from 'react-hook-form'
+import { useForm, useWatch, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -41,6 +41,10 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { MultiSelect } from '@/components/multi-select'
+import { resolveImageUrl } from '@/lib/image-url'
+import {
+  buildCourseFormData,
+} from '../lib/course-form-data'
 import {
   courseFormSchema,
   type Course,
@@ -68,10 +72,26 @@ export function CoursesMutateDrawer({
   const createCourse = useCreateCourse()
   const updateCourse = useUpdateCourse()
   const isUpdate = !!currentRow
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(open)
+
+  // Adjust state during render when the drawer opens, so a previously
+  // selected file never leaks into a new create/update session.
+  if (open !== isDrawerOpen) {
+    setIsDrawerOpen(open)
+    if (open) {
+      setImageFile(null)
+    }
+  }
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: formDefaultValues,
+  })
+
+  const currentImageUrl = useWatch({
+    control: form.control,
+    name: 'imageUrl',
   })
 
   useEffect(() => {
@@ -82,13 +102,15 @@ export function CoursesMutateDrawer({
 
   const onSubmit = async (data: CourseFormValues) => {
     try {
+      const formData = buildCourseFormData(data, imageFile)
+
       if (isUpdate && currentRow) {
         await updateCourse.mutateAsync({
           slug: currentRow.slug,
-          payload: data,
+          payload: formData,
         })
       } else {
-        await createCourse.mutateAsync(data)
+        await createCourse.mutateAsync(formData)
       }
       toast.success(isUpdate ? 'Course updated successfully.' : 'Course created successfully.')
       onOpenChange(false)
@@ -151,23 +173,31 @@ export function CoursesMutateDrawer({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name='thumbnailUrl'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Thumbnail URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder='https://...'
-                      type='url'
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className='space-y-2'>
+              <Label>Course Image</Label>
+              {(() => {
+                const currentImage = resolveImageUrl(currentImageUrl)
+                return currentImage ? (
+                  <img
+                    src={currentImage}
+                    alt='Current course image'
+                    className='h-28 w-full rounded-md border object-cover'
+                  />
+                ) : null
+              })()}
+              <Input
+                type='file'
+                accept='image/*'
+                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              />
+              <p className='text-xs text-muted-foreground'>
+                {imageFile
+                  ? `Ready to upload: ${imageFile.name}`
+                  : currentImageUrl
+                    ? 'Upload a new image to replace the current one.'
+                    : 'PNG, JPG or WEBP, up to 5MB.'}
+              </p>
+            </div>
             <FormField
               control={form.control}
               name='duration'

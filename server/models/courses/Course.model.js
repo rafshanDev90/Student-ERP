@@ -16,7 +16,7 @@ const courseSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  thumbnailUrl: { 
+  imageUrl: { 
     type: String, 
     default: 'https://university.edu' 
   },

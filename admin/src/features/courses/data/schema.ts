@@ -6,7 +6,7 @@ export const courseSchema = z.object({
   title: z.string(),
   slug: z.string(),
   description: z.string(),
-  thumbnailUrl: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
   duration: z.string(),
   courseType: z.string(),
   level: z.string(),
@@ -38,7 +38,7 @@ export type Course = z.infer<typeof courseSchema>
 const courseFormSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(1, 'Description is required.'),
-  thumbnailUrl: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
+  imageUrl: z.string().optional(),
   duration: z.string().min(1, 'Duration is required.'),
   courseType: z.string().min(1, 'Please select a course type.'),
   level: z.string().min(1, 'Please select a level.'),

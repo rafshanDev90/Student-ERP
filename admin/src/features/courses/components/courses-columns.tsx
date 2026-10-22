@@ -1,7 +1,9 @@
 import { type ColumnDef } from '@tanstack/react-table'
+import { ImageIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
+import { resolveImageUrl } from '@/lib/image-url'
 import { levels, statuses } from '../data/data'
 import { type Course } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
@@ -47,6 +49,29 @@ export const coursesColumns: ColumnDef<Course>[] = [
         <div className='flex space-x-2'>
           {course.status === 'archived' && <Badge variant='outline'>Archived</Badge>}
           <span className='truncate font-medium'>{course.title}</span>
+        </div>
+      )
+    },
+  },
+  {
+    id: 'image',
+    header: () => null,
+    enableSorting: false,
+    enableHiding: false,
+    meta: { className: 'ps-1 w-28', tdClassName: 'ps-4' },
+    cell: ({ row }) => {
+      const course = row.original
+      const src = resolveImageUrl(course.imageUrl)
+
+      return src ? (
+        <img
+          src={src}
+          alt={course.title}
+          className='h-12 w-20 rounded-md border object-cover'
+        />
+      ) : (
+        <div className='flex h-12 w-20 items-center justify-center rounded-md border bg-muted'>
+          <ImageIcon className='size-5 text-muted-foreground' />
         </div>
       )
     },

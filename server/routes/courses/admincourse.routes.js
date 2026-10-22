@@ -6,6 +6,7 @@ import {
   deleteCourse,
 } from '../../controllers/adminCourse.controller.js';
 import { protect, authorize } from '../../middleware/clerkAuth.js';
+import { uploadWithFallback } from '../../middleware/uploadMiddleware.js';
 import { validateBody } from '../../middleware/validate.js';
 import {
   createCourseSchema,
@@ -19,6 +20,7 @@ router.post(
   '/courses',
   protect,
   authorize('teacher', 'admin'),
+  uploadWithFallback('courses'),
   validateBody(createCourseSchema),
   addCourse
 );
@@ -26,6 +28,7 @@ router.put(
   '/courses/:slug',
   protect,
   authorize('teacher', 'admin'),
+  uploadWithFallback('courses'),
   validateBody(updateCourseSchema),
   editCourse
 );

@@ -10,6 +10,13 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  // When sending FormData, let the browser set the multipart Content-Type
+  // (including the boundary). Forcing a manual Content-Type here breaks uploads.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
+
   return config
 })
 

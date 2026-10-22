@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { Category, Course, CourseFormValues } from '../data/schema'
+import type { Category, Course } from '../data/schema'
 
 export const courseKeys = {
   all: ['courses'] as const,
@@ -27,7 +27,7 @@ export function useCreateCourse() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: CourseFormValues) =>
+    mutationFn: (payload: FormData) =>
       apiClient.post('/admin/courses', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() })
@@ -44,7 +44,7 @@ export function useUpdateCourse() {
       payload,
     }: {
       slug: string
-      payload: CourseFormValues
+      payload: FormData
     }) => apiClient.put(`/admin/courses/${slug}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() })

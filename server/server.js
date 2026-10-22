@@ -27,6 +27,7 @@ app.use(express.json());
 
 // Serve locally-stored fallback uploads (public/uploads/**)
 app.use(express.static(path.join(process.cwd(), "public")));
+app.use(clerkMiddleware());
 
 app.use("/api/webhook", webhookRoutes);
 app.use("/api/auth", authRoutes);

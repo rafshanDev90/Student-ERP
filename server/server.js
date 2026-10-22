@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import { clerkMiddleware } from "@clerk/express";
 import connectDB from "./config/db.js";
 import webhookRoutes from "./routes/webhook.js";
@@ -18,16 +19,18 @@ connectDB();
 const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-
+app.use(compression());
 app.use(express.json());
 
-app.use(clerkMiddleware());
 
+
+//app.use(clerkMiddleware());
+app.use("/api/courses", courseRoutes);
 app.use("/api/webhook", webhookRoutes);
 app.use("/api/auth", authRoutes);
 
 //Course routes
-app.use("/api/courses", courseRoutes);
+
 app.use("/api/admin", adminCourseRoutes);
 app.use("/api/admin/users", userRoutes);
 app.use("/api/categories", categoryRoutes);

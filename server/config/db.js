@@ -36,7 +36,12 @@ const connectDB = async () => {
     });
 
     // ✅ REMOVED DEPRECATED OPTIONS HERE AS WELL
-    await mongoose.connect(url).catch((error) => console.log(error));
+    await mongoose.connect(url, {
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    }).catch((error) => console.log(error));
 };
 
 export default connectDB;

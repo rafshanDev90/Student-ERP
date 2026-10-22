@@ -63,4 +63,9 @@ const courseSchema = new mongoose.Schema({
 // Text indexing to make the search bar work perfectly
 courseSchema.index({ title: 'text', description: 'text' });
 
+// Compound indexes for common query patterns
+courseSchema.index({ status: 1, level: 1, courseType: 1 });
+courseSchema.index({ status: 1, isPopular: 1 });
+courseSchema.index({ status: 1, createdAt: -1 });
+
 export default mongoose.model('Course', courseSchema);

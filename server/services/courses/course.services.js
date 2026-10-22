@@ -28,7 +28,7 @@ export const getAllCourses = async (queryParams) => {
 
   // Filter by Category Slug
   if (tag) {
-    const category = await Category.findOne({ slug: tag.toLowerCase() });
+    const category = await Category.findOne({ slug: tag.toLowerCase() }).lean();
     if (category) {
       query.tags = category._id;
     } else {
@@ -41,12 +41,20 @@ export const getAllCourses = async (queryParams) => {
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   // 3. Execute DB queries simultaneously to save performance time
-  const coursesPromise = Course.find(query)
-    .populate('instructor', 'name avatarUrl title') // Get teacher name, photo, and title
-    .populate('tags', 'name slug')                 // Get full tag details
+  // Use .lean() for read-only list views - faster, less memory
+  const projection = { 
+    title: 1, slug: 1, description: 1, thumbnailUrl: 1, duration: 1,
+    courseType: 1, level: 1, isPopular: 1, status: 1,
+    instructor: 1, tags: 1, createdAt: 1
+  };
+
+  const coursesPromise = Course.find(query, projection)
+    .populate('instructor', 'name avatarUrl title')
+    .populate('tags', 'name slug')
     .skip(skip)
     .limit(parseInt(limit))
-    .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 });
+    .sort(search ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
+    .lean(); // Returns plain JS objects, not Mongoose documents
 
   const countPromise = Course.countDocuments(query);
 
@@ -64,10 +72,17 @@ export const getAllCourses = async (queryParams) => {
  * Fetch top featured / popular courses for homepage banners
  */
 export const getFeaturedCourses = async () => {
-  return await Course.find({ isPopular: true, status: 'published' })
+  const projection = { 
+    title: 1, slug: 1, description: 1, thumbnailUrl: 1, duration: 1,
+    courseType: 1, level: 1, isPopular: 1, status: 1,
+    instructor: 1, tags: 1, createdAt: 1
+  };
+  
+  return await Course.find({ isPopular: true, status: 'published' }, projection)
     .populate('instructor', 'name avatarUrl title')
     .populate('tags', 'name slug')
-    .limit(4);
+    .limit(4)
+    .lean();
 };
 
 /**
@@ -76,7 +91,8 @@ export const getFeaturedCourses = async () => {
 export const getCourseBySlug = async (slug) => {
   const course = await Course.findOne({ slug, status: 'published' })
     .populate('instructor', 'name avatarUrl title bio')
-    .populate('tags', 'name slug');
+    .populate('tags', 'name slug')
+    .lean();
     
   if (!course) {
     throw createNotFoundError('Course not found');

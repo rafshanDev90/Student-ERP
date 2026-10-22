@@ -7,6 +7,7 @@ import { createApiResponse } from '../../utils/apiResponse.js';
  * Public catalog access with filters
  */
 export const getCourses = asyncHandler(async (req, res) => {
+  console.log("api route hit");
   const result = await getAllCourses(req.query);
 
   return res.status(200).json(createApiResponse(200, {
